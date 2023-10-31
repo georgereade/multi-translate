@@ -1,13 +1,11 @@
 /** @type {import('@remix-run/dev').AppConfig} */
-module.exports = {
-  ignoredRouteFiles: ["**/.*"],
-  serverModuleFormat: "cjs",
-};
+export const ignoredRouteFiles = ["**/.*"];
+export const serverModuleFormat = "cjs";
 
-browserNodeBuiltinsPolyfill = {
+export const browserNodeBuiltinsPolyfill = {
   modules: {
-    buffer: true, // Provide a JSPM polyfill
-    fs: true, // Provide an empty polyfill
+    buffer: true,
+    fs: true,
     http: true,
     path: true,
     os: true,
