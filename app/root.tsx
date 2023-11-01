@@ -1,9 +1,10 @@
 import type { LinksFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
+import * as deepl from "deepl-node";
+import "dotenv/config";
 
 import {
   Form,
-  Link,
   Links,
   LiveReload,
   Meta,
@@ -14,19 +15,26 @@ import {
 } from "@remix-run/react";
 
 import appStylesHref from "./app.css";
-import { getContacts } from "./data";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: appStylesHref },
 ];
 
+const authKey = process.env.DEEPL_API;
+const translator = new deepl.Translator(authKey!);
+
 export const loader = async () => {
-  const contacts = await getContacts();
-  return json({ contacts });
+  const targetLang: deepl.TargetLanguageCode = "en-GB";
+  const translations = await translator.translateText(
+    ["お元気ですか？", "¿Cómo estás?"],
+    null,
+    targetLang
+  );
+  return json({ translations });
 };
 
 export default function App() {
-  const { contacts } = useLoaderData<typeof loader>();
+  const { translations } = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -38,10 +46,7 @@ export default function App() {
       </head>
       <body>
         <div id="sidebar">
-          <h1>Remix Contacts</h1>
-          <div id="detail">
-            <Outlet />
-          </div>
+          <h1>Multi Translate</h1>
           <div>
             <Form id="search-form" role="search">
               <input
@@ -58,31 +63,22 @@ export default function App() {
             </Form>
           </div>
           <nav>
-            {contacts.length ? (
+            {translations.length ? (
               <ul>
-                {contacts.map((contact) => (
-                  <li key={contact.id}>
-                    <Link to={`contacts/${contact.id}`}>
-                      {contact.first || contact.last ? (
-                        <>
-                          {contact.first} {contact.last}
-                        </>
-                      ) : (
-                        <i>No Name</i>
-                      )}{" "}
-                      {contact.favorite ? <span>★</span> : null}
-                    </Link>
-                  </li>
+                {translations.map((translation) => (
+                  <li>{translation.text}</li>
                 ))}
               </ul>
             ) : (
               <p>
-                <i>No contacts</i>
+                <i>Enter some text to begin translation</i>
               </p>
             )}
           </nav>
         </div>
-
+        <div id="detail">
+          <Outlet />
+        </div>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
