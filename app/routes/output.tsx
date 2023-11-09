@@ -10,13 +10,13 @@ const translator = new deepl.Translator(authKey!);
 export async function action({ request }: ActionFunctionArgs) {
   const targetLang: deepl.TargetLanguageCode = "zh";
   const formData = await request.formData();
-  const translationText = formData.getAll("textInput").toString();
+  const translationText = String(formData.getAll("textInput"));
   // const errors = {
   //   translationText: translationText === null ? "Text is required" : "",
   // };
   // const errors = {}
   // if (translationText === ""){
-  //   errors.textInput = "Please enter some text";
+  //   errors.translationText = "Please enter some text";
   // }
   const translations: deepl.TextResult = await translator.translateText(
     translationText,
@@ -33,5 +33,10 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Output() {
   const data = useActionData<typeof action>();
-  return <div> {data ? data.text : <p>Please enter some text</p>}</div>;
+  return (
+    <div>
+      {" "}
+      {data ? data.text : <p>Please enter some text for translation.</p>}
+    </div>
+  );
 }

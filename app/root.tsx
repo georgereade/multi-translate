@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LinksFunction } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import * as deepl from "deepl-node";
 import "dotenv/config";
 
@@ -12,6 +12,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  useActionData,
 } from "@remix-run/react";
 
 import appStylesHref from "./app.css";
@@ -22,53 +23,6 @@ export const links: LinksFunction = () => [
 
 const authKey = process.env.DEEPL_API;
 const translator = new deepl.Translator(authKey!);
-// const targetLanguages: string[] = ["de", "es"];
-
-// export const action = async () => {
-//   // for (var i = 0; i < targetLanguages.length; i++) {
-//   const targetLang: deepl.TargetLanguageCode = "en-GB";
-//   const translations = await translator.translateText(
-//     request.formData(),
-//     null,
-//     targetLang
-//   );
-//   return json({ translations });
-//   // }
-// };
-
-// export const action = async ({ request }: ActionFunctionArgs) => {
-//   const targetLang: deepl.TargetLanguageCode = "en-GB";
-//   const formData = await request.formData();
-//   const translationText = formData.getAll("textInput").toString();
-
-// const errors = {
-//   textInput: textInput ? null | undefined : "Text is required",
-// };
-// const hasErrors = Object.values(errors).some((errorMessage) => errorMessage);
-// if (hasErrors) {
-//   return json(errors);
-// }
-
-//   const translations:deepl.TextResult = await translator.translateText(
-//     translationText,
-//     null,
-//     targetLang
-//   );
-//   return translations;
-// };
-
-// export async function action({ request }: ActionFunctionArgs) {
-//   const targetLang: deepl.TargetLanguageCode = "en-GB";
-//   const formData = await request.formData();
-//   const translationText = formData.getAll("textInput").toString() || "";
-
-//   const translations: deepl.TextResult = await translator.translateText(
-//     translationText,
-//     null,
-//     targetLang
-//   );
-//   return translations;
-// }
 
 export const loader = async () => {
   const targetLang: deepl.TargetLanguageCode = "en-GB";
@@ -82,6 +36,7 @@ export const loader = async () => {
 
 export default function App() {
   const { demoTranslations } = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
 
   return (
     <html lang="en">
@@ -96,13 +51,17 @@ export default function App() {
           <h1>Multi Translate</h1>
           <div>
             <Form id="search-form" method="post" action="/output">
-              <input
-                id="q"
-                aria-label="Enter text for translation"
-                placeholder="Enter text for translation"
-                type="text"
-                name="textInput"
-              />
+              <p>
+                <input
+                  aria-label="Enter text for translation"
+                  placeholder="Enter text for translation"
+                  type="text"
+                  name="textInput"
+                />
+                {actionData?.errors?.textInput ? (
+                  <em>{actionData?.errors.textInput}</em>
+                ) : null}
+              </p>
               <div id="search-spinner" aria-hidden hidden={true} />
               <button type="submit">Translate</button>
             </Form>
@@ -128,4 +87,22 @@ export default function App() {
       </body>
     </html>
   );
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const textInput = String(formData.getAll("textInput"));
+
+  const errors: any = {};
+
+  if (textInput === "I gay") {
+    errors.textInput = "Please enter some text.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return json({ errors });
+  }
+
+  // Redirect to dashboard if validation is successful
+  return redirect("/");
 }
